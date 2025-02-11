@@ -1,21 +1,33 @@
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { PermissionsAndroid, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BleManager, Device } from 'react-native-ble-plx';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <Pressable onPress={async () => {
-        const result = await requestAndroid31Permissions();
-        console.log("result", result);
-      }}>
-        <Text>Request Android 31 Permissions</Text>
-      </Pressable>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
+  const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const bleManager = new BleManager();
+  
+  const isDuplicteDevice = (devices: Device[], nextDevice: Device) =>
+    devices.findIndex((device) => nextDevice.id === device.id) > -1;
+  
+  const scanForPeripherals = () =>
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log(error);
+      }
+  
+      if (device) {
+        setAllDevices((prevState: Device[]) => {
+          if (!isDuplicteDevice(prevState, device)) {
+            console.log("device", device);
+            return [...prevState, device];
+          }
+          return prevState;
+        });
+      }
+    });
+  
 
 const requestAndroid31Permissions = async () => {
   console.log("requestAndroid31Permissions");
@@ -50,6 +62,42 @@ const requestAndroid31Permissions = async () => {
     fineLocationPermission === "granted"
   );
 };
+  return (
+    <View style={styles.container}>
+      <Text>Pilulier BLE</Text>
+      <Pressable style={styles.pressable}onPress={async () => {
+        const result = await requestAndroid31Permissions();
+        console.log("result", result);
+      }}>
+        <Text>Request Android 31 Permissions</Text>
+      </Pressable>
+      {
+        isScanning ? (
+          <>
+            <Pressable style={styles.pressable} onPress={() => {
+                bleManager.stopDeviceScan();
+                setIsScanning(false);
+              }}>
+          <Text>Stop Scanning</Text>
+      </Pressable>
+          </>
+        ) : (
+          <>
+            <Pressable style={styles.pressable}onPress={async () => {
+          setIsScanning(true);
+          await scanForPeripherals();
+        }
+        }>
+          <Text>Scan Devices</Text>
+        </Pressable>
+          </>
+        )
+      }
+      <StatusBar style="auto" />
+    </View>
+  );
+}
+
 
 const styles = StyleSheet.create({
   container: {
@@ -58,4 +106,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pressable: {
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 5,
+    margin: 10
+  }
 });
