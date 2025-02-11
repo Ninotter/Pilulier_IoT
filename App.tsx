@@ -1,10 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { PermissionsAndroid, StyleSheet, Text, View } from 'react-native';
+import { PermissionsAndroid, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function App() {
   return (
     <View style={styles.container}>
       <Text>Open up App.tsx to start working on your app!</Text>
+      <Pressable onPress={async () => {
+        const result = await requestAndroid31Permissions();
+        console.log("result", result);
+      }}>
+        <Text>Request Android 31 Permissions</Text>
+      </Pressable>
       <StatusBar style="auto" />
     </View>
   );
