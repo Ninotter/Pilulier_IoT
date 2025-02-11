@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { PermissionsAndroid, Pressable, StyleSheet, Text, View } from 'react-native';
+import { PermissionsAndroid, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BleManager, Device } from 'react-native-ble-plx';
 
 export default function App() {
@@ -64,35 +64,45 @@ const requestAndroid31Permissions = async () => {
 };
   return (
     <View style={styles.container}>
-      <Text>Pilulier BLE</Text>
-      <Pressable style={styles.pressable}onPress={async () => {
-        const result = await requestAndroid31Permissions();
-        console.log("result", result);
-      }}>
-        <Text>Request Android 31 Permissions</Text>
-      </Pressable>
-      {
-        isScanning ? (
-          <>
-            <Pressable style={styles.pressable} onPress={() => {
-                bleManager.stopDeviceScan();
-                setIsScanning(false);
-              }}>
-          <Text>Stop Scanning</Text>
-      </Pressable>
-          </>
-        ) : (
-          <>
-            <Pressable style={styles.pressable}onPress={async () => {
-          setIsScanning(true);
-          await scanForPeripherals();
-        }
-        }>
-          <Text>Scan Devices</Text>
+        <Text>Pilulier BLE</Text>
+        <Pressable style={styles.pressable}onPress={async () => {
+          const result = await requestAndroid31Permissions();
+          console.log("result", result);
+        }}>
+          <Text>Request Android 31 Permissions</Text>
         </Pressable>
-          </>
-        )
-      }
+        {
+          isScanning ? (
+            <>
+              <Pressable style={styles.pressable} onPress={() => {
+                  bleManager.stopDeviceScan();
+                  setIsScanning(false);
+                  setAllDevices([]);
+                }}>
+            <Text>Stop Scanning</Text>
+        </Pressable>
+            </>
+          ) : (
+            <>
+              <Pressable style={styles.pressable}onPress={async () => {
+            setIsScanning(true);
+            await scanForPeripherals();
+          }
+          }>
+            <Text>Scan Devices</Text>
+          </Pressable>
+            </>
+          )
+        }
+        {
+          allDevices.map((device) => (
+            device.name && (
+              <Text key={device.id}>
+                {device.name}
+              </Text>
+            )
+          ))
+        }
       <StatusBar style="auto" />
     </View>
   );
