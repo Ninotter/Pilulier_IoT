@@ -9,6 +9,7 @@ import {
 import { Device } from "react-native-ble-plx";
 import BLE from "./BLE";
 import BLEPermission from "./BLEPermissions";
+import * as Notifications from "expo-notifications";
 
 export default function App() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
@@ -36,8 +37,11 @@ export default function App() {
       }
       return prevState;
     });
-    if (device.name?.includes(deviceName)) {
+    if (device.name?.toLowerCase().includes(deviceName.toLowerCase())) {
+      console.debug("found pilulier");
       setConnectedDevice(device);
+      ble.stopScan();
+      setAllDevices([]);
       return true;
     }
     return false;
@@ -46,6 +50,28 @@ export default function App() {
   const scanForPeripherals = () => {
     ble.startScan(onDeviceFound);
   };
+
+
+  // First, set the handler that will cause the notification
+  // to show the alert
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+
+  const sendNotification = () => {
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Look at that notification',
+          body: "I'm so proud of myself!",
+        },
+        trigger: null,
+      });
+  }
+
 
   const renderPermissionRequest = () => {
     return (
@@ -111,6 +137,19 @@ export default function App() {
     );
   };
 
+  const renderShowConfigButton = () => {
+    return connectedDevice ? (
+      <Pressable
+        style={styles.pressable}
+        onPress={() => {
+          console.debug("show config");
+        }}
+      >
+        <Text>Edit Config</Text>
+      </Pressable>
+    ): null;
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pilulier BLE</Text>
@@ -118,6 +157,12 @@ export default function App() {
       {renderScanningControls()}
       {renderConnectedDevice()}
       {renderDevices()}
+      <Pressable style={styles.pressable} onPress={() => {
+        sendNotification();}}
+        >
+        <Text>Notification test</Text>
+      </Pressable>
+      {renderShowConfigButton()}
       <StatusBar style="auto" />
     </View>
   );
@@ -141,3 +186,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   }
 });
+
+/**
+ * @description
+ * This class is responsible for notifying the user when the connection to the device is lost for a long period of time
+ */
+class NotifyLongDisconnect{
+}
