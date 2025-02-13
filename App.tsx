@@ -15,12 +15,14 @@ export default function App() {
   const ble = new BLE();
   const [isScanning, setIsScanning] = useState(false);
   const [isBluetoothPermissionGranted, setIsBluetoothPermissionGranted] = useState(false);
-  const deviceName = "Buds";
-  var pilulierDevice: Device | undefined = undefined;
-
-  BLEPermission.requestPermissions().then((result) => {
-    setIsBluetoothPermissionGranted(result);
-  });
+  const deviceName = "pilulier";
+  const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+  
+  if(!isBluetoothPermissionGranted){
+    BLEPermission.requestPermissions().then((result) => {
+      setIsBluetoothPermissionGranted(result);
+    });
+  }
   
   const onUpdatedScanningState = (scanning: boolean) => {
     setIsScanning(scanning);
@@ -35,7 +37,7 @@ export default function App() {
       return prevState;
     });
     if (device.name?.includes(deviceName)) {
-      pilulierDevice = device;
+      setConnectedDevice(device);
       return true;
     }
     return false;
@@ -45,55 +47,83 @@ export default function App() {
     ble.startScan(onDeviceFound);
   };
 
+  const renderPermissionRequest = () => {
+    return (
+      <Pressable
+        style={styles.pressable}
+        onPress={async () => {
+          const result = await BLEPermission.requestPermissions();
+          setIsBluetoothPermissionGranted(result);
+        }}
+      >
+        <Text>Request Permissions</Text>
+      </Pressable>
+    );
+  };
+
+  const renderScanningControls = () => {
+    return isScanning ? (
+      <Pressable
+        style={styles.pressable}
+        onPress={() => {
+          ble.stopScan();
+          setAllDevices([]);
+        }}
+      >
+        <Text>Stop Scanning</Text>
+      </Pressable>
+    ) : (
+      <Pressable
+        style={styles.pressable}
+        onPress={async () => {
+          setIsScanning(true);
+          await scanForPeripherals();
+        }}
+      >
+        <Text>Scan Devices</Text>
+      </Pressable>
+    );
+  };
+
+  const renderConnectedDevice = () => {
+    return connectedDevice ? (
+      <Text>Connected to {connectedDevice.name}</Text>
+    ) : null;
+  };
+
+  const renderDevices = () => {
+    return allDevices.map((device) =>
+      device.name ? (
+        <Pressable
+          key={device.id}
+          onPress={async () => {
+            const result = await ble.connectToDevice(device);
+            if (result) {
+              setConnectedDevice(result);
+              ble.stopScan();
+              setAllDevices([]);
+            }
+          }}
+        >
+          <Text>{device.name}</Text>
+        </Pressable>
+      ) : null
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text>Pilulier BLE</Text>
-      {
-        isBluetoothPermissionGranted ? null : (
-          <Pressable
-            style={styles.pressable}
-            onPress={async () => {
-              const result = await BLEPermission.requestPermissions();
-              console.log("result", result);
-              setIsBluetoothPermissionGranted(result);
-            }}
-          >
-            <Text>Request Permissions</Text>
-          </Pressable>
-        )
-      }
-      {isScanning ? (
-        <>
-          <Pressable
-            style={styles.pressable}
-            onPress={() => {
-              ble.stopScan();
-              setAllDevices([]);
-            }}
-          >
-            <Text>Stop Scanning</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <Pressable
-            style={styles.pressable}
-            onPress={async () => {
-              setIsScanning(true);
-              await scanForPeripherals();
-            }}
-          >
-            <Text>Scan Devices</Text>
-          </Pressable>
-        </>
-      )}
-      {allDevices.map(
-        (device) => device.name && <Text key={device.id}>{device.name}</Text>
-      )}
+      {isBluetoothPermissionGranted ? null : renderPermissionRequest()}
+      {renderScanningControls()}
+      {renderConnectedDevice()}
+      {renderDevices()}
       <StatusBar style="auto" />
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

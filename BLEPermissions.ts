@@ -3,7 +3,6 @@ import * as ExpoDevice from "expo-device";
 
 export default class BLEPermissions {
     static async requestAndroid31Permissions() {
-        console.log("requestAndroid31Permissions");
         const bluetoothScanPermission = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
             {
@@ -37,9 +36,8 @@ export default class BLEPermissions {
     };
     
     static async requestPermissions() {
-        console.log("requestPermissions");
         if (Platform.OS === "android") {
-            console.log("Platform is android");
+            console.debug("Platform is android");
             if ((ExpoDevice.platformApiLevel ?? -1) < 31) {
                 const granted = await PermissionsAndroid.request(
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -60,5 +58,4 @@ export default class BLEPermissions {
             return true;
         }
     };
-
 }

@@ -38,4 +38,19 @@ export default class BLE{
         this.SetScanState(false);
         this.bleManager.stopDeviceScan();
     }
+
+    connectToDevice = async (device : Device) : Promise<Device | null> => {
+        var discoveredDevice = null;
+        await device.connect()
+        .then((device) => {
+            console.debug("Connected to device", device.name);
+            discoveredDevice = device.discoverAllServicesAndCharacteristics();
+            this.SetScanState(false);
+            return discoveredDevice;
+        })
+        .catch((error) => {
+            console.error("Error connecting to device", error);
+        });
+        return discoveredDevice;
+    }
 }
