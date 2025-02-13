@@ -113,7 +113,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Pilulier BLE</Text>
+      <Text style={styles.title}>Pilulier BLE</Text>
       {isBluetoothPermissionGranted ? null : renderPermissionRequest()}
       {renderScanningControls()}
       {renderConnectedDevice()}
@@ -122,8 +122,6 @@ export default function App() {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -138,4 +136,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     margin: 10,
   },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold"
+  }
 });
