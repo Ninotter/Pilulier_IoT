@@ -1,125 +1,111 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { PermissionsAndroid, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { BleManager, Device } from 'react-native-ble-plx';
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { Device } from "react-native-ble-plx";
+import BLE from "./BLE";
+import BLEPermission from "./BLEPermissions";
 
 export default function App() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const ble = new BLE();
   const [isScanning, setIsScanning] = useState(false);
-  const bleManager = new BleManager();
+  const [isBluetoothPermissionGranted, setIsBluetoothPermissionGranted] = useState(false);
+  const deviceName = "Buds";
+  var pilulierDevice: Device | undefined = undefined;
+
+  BLEPermission.requestPermissions().then((result) => {
+    setIsBluetoothPermissionGranted(result);
+  });
   
-  const isDuplicteDevice = (devices: Device[], nextDevice: Device) =>
-    devices.findIndex((device) => nextDevice.id === device.id) > -1;
-  
-  const scanForPeripherals = () =>
-    bleManager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.log(error);
+  const onUpdatedScanningState = (scanning: boolean) => {
+    setIsScanning(scanning);
+  }
+  ble.notifyScanningChangeState = onUpdatedScanningState;
+
+  const onDeviceFound = (device: Device): boolean => {
+    setAllDevices((prevState: Device[]) => {
+      if (!BLE.isDuplicateDevice(prevState, device)) {
+        return [...prevState, device];
       }
-  
-      if (device) {
-        setAllDevices((prevState: Device[]) => {
-          if (!isDuplicteDevice(prevState, device)) {
-            console.log("device", device);
-            return [...prevState, device];
-          }
-          return prevState;
-        });
-      }
+      return prevState;
     });
-  
+    if (device.name?.includes(deviceName)) {
+      pilulierDevice = device;
+      return true;
+    }
+    return false;
+  };
 
-const requestAndroid31Permissions = async () => {
-  console.log("requestAndroid31Permissions");
-  const bluetoothScanPermission = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-    {
-      title: "Location Permission",
-      message: "Bluetooth Low Energy requires Location",
-      buttonPositive: "OK",
-    }
-  );
-  const bluetoothConnectPermission = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-    {
-      title: "Location Permission",
-      message: "Bluetooth Low Energy requires Location",
-      buttonPositive: "OK",
-    }
-  );
-  const fineLocationPermission = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    {
-      title: "Location Permission",
-      message: "Bluetooth Low Energy requires Location",
-      buttonPositive: "OK",
-    }
-  );
+  const scanForPeripherals = () => {
+    ble.startScan(onDeviceFound);
+  };
 
-  return (
-    bluetoothScanPermission === "granted" &&
-    bluetoothConnectPermission === "granted" &&
-    fineLocationPermission === "granted"
-  );
-};
   return (
     <View style={styles.container}>
-        <Text>Pilulier BLE</Text>
-        <Pressable style={styles.pressable}onPress={async () => {
-          const result = await requestAndroid31Permissions();
-          console.log("result", result);
-        }}>
-          <Text>Request Android 31 Permissions</Text>
-        </Pressable>
-        {
-          isScanning ? (
-            <>
-              <Pressable style={styles.pressable} onPress={() => {
-                  bleManager.stopDeviceScan();
-                  setIsScanning(false);
-                  setAllDevices([]);
-                }}>
+      <Text>Pilulier BLE</Text>
+      {
+        isBluetoothPermissionGranted ? null : (
+          <Pressable
+            style={styles.pressable}
+            onPress={async () => {
+              const result = await BLEPermission.requestPermissions();
+              console.log("result", result);
+              setIsBluetoothPermissionGranted(result);
+            }}
+          >
+            <Text>Request Permissions</Text>
+          </Pressable>
+        )
+      }
+      {isScanning ? (
+        <>
+          <Pressable
+            style={styles.pressable}
+            onPress={() => {
+              ble.stopScan();
+              setAllDevices([]);
+            }}
+          >
             <Text>Stop Scanning</Text>
-        </Pressable>
-            </>
-          ) : (
-            <>
-              <Pressable style={styles.pressable}onPress={async () => {
-            setIsScanning(true);
-            await scanForPeripherals();
-          }
-          }>
+          </Pressable>
+        </>
+      ) : (
+        <>
+          <Pressable
+            style={styles.pressable}
+            onPress={async () => {
+              setIsScanning(true);
+              await scanForPeripherals();
+            }}
+          >
             <Text>Scan Devices</Text>
           </Pressable>
-            </>
-          )
-        }
-        {
-          allDevices.map((device) => (
-            device.name && (
-              <Text key={device.id}>
-                {device.name}
-              </Text>
-            )
-          ))
-        }
+        </>
+      )}
+      {allDevices.map(
+        (device) => device.name && <Text key={device.id}>{device.name}</Text>
+      )}
       <StatusBar style="auto" />
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressable: {
     backgroundColor: "blue",
     padding: 10,
     borderRadius: 5,
-    margin: 10
-  }
+    margin: 10,
+  },
 });
