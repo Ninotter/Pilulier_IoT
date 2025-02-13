@@ -151,6 +151,11 @@ export default function App() {
     ): null;
   }
 
+  const onConfirmGrid = (grid : Array<boolean>) => {
+    console.debug("confirmed grid!");
+    console.debug(grid);
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pilulier BLE</Text>
@@ -165,7 +170,7 @@ export default function App() {
         <Text>Notification test</Text>
       </Pressable>
       {renderShowConfigButton()}
-      <Grid/>
+      <Grid confirmCallback={onConfirmGrid}/>
       <StatusBar style="auto" />
     </View>
   );

@@ -1,11 +1,20 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, FlatList, StyleSheet, Text } from "react-native";
+import { View, TouchableOpacity, FlatList, StyleSheet, Text, Pressable } from "react-native";
 
-const Grid = () => {
+
+interface GridProps {
+  confirmCallback : (grid : Array<boolean>) => void;
+}
+
+const Grid = (props : GridProps) => {
   const rows = 3;
   const cols = 7;
   const daysOfWeek = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
   const [grid, setGrid] = useState(Array(rows * cols).fill(false));
+
+  const getCells = () : Array<boolean> => {
+    return grid;
+  }
 
   const toggleCell = (index: number) => {
     const newGrid = [...grid];
@@ -42,6 +51,9 @@ const Grid = () => {
         keyExtractor={(_, index) => index.toString()}
         numColumns={cols}
       />
+      <Pressable onPress={() => props.confirmCallback(getCells())}>
+        <Text>Confirmez la configuration</Text>
+      </Pressable>
     </View>
   );
 };
