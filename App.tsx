@@ -10,6 +10,7 @@ import { Device } from "react-native-ble-plx";
 import BLE from "./BLE";
 import BLEPermission from "./BLEPermissions";
 import * as Notifications from "expo-notifications";
+import Grid from "./grid";
 
 export default function App() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
@@ -142,7 +143,7 @@ export default function App() {
       <Pressable
         style={styles.pressable}
         onPress={() => {
-          console.debug("show config");
+          console.debug("Edit config pressed");
         }}
       >
         <Text>Edit Config</Text>
@@ -158,11 +159,13 @@ export default function App() {
       {renderConnectedDevice()}
       {renderDevices()}
       <Pressable style={styles.pressable} onPress={() => {
-        sendNotification();}}
+        sendNotification();
+      }}
         >
         <Text>Notification test</Text>
       </Pressable>
       {renderShowConfigButton()}
+      <Grid/>
       <StatusBar style="auto" />
     </View>
   );
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   pressable: {
-    backgroundColor: "blue",
+    backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 5,
     margin: 10,
