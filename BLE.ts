@@ -41,7 +41,7 @@ export default class BLE{
 
     connectToDevice = async (device : Device) : Promise<Device | null> => {
         var discoveredDevice = null;
-        await device.connect()
+        await device.connect({requestMTU: 255})
         .then((device) => {
             console.debug("Connected to device", device.name);
             discoveredDevice = device.discoverAllServicesAndCharacteristics();

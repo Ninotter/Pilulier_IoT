@@ -39,6 +39,16 @@ export class ConfigPilulier{
         return JSON.stringify(json);
     }
 
+    toBinaryString() : string{
+        var binaryString = "";
+        for(let day of this.week.daysArray){
+            binaryString += day.mustTakeMorning ? "1" : "0";
+            binaryString += day.mustTakeMidday ? "1" : "0";
+            binaryString += day.mustTakeEvening ? "1" : "0";
+        }
+        return binaryString;
+    }
+
     getTotalPillsToTake() : number{
         var total = 0;
         for(let day of this.week.daysArray){

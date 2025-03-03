@@ -12,13 +12,14 @@ import BLEPermission from "./BLEPermissions";
 import * as Notifications from "expo-notifications";
 import Grid from "./grid";
 import {ConfigPilulier, Week, Day } from "./ConfigPilulier";
+import { CHARACTERISTIC_UUID_SET_CONFIG, SERVICE_UUID } from "./BLEInfos";
 
 export default function App() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const ble = new BLE();
   const [isScanning, setIsScanning] = useState(false);
   const [isBluetoothPermissionGranted, setIsBluetoothPermissionGranted] = useState(false);
-  const deviceName = "pilulier";
+  const deviceName = "ESP32-Pilulier";
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   
   if(!isBluetoothPermissionGranted){
@@ -41,9 +42,7 @@ export default function App() {
     });
     if (device.name?.toLowerCase().includes(deviceName.toLowerCase())) {
       console.debug("found pilulier");
-      setConnectedDevice(device);
-      ble.stopScan();
-      setAllDevices([]);
+      connectToDevice(device);
       return true;
     }
     return false;
@@ -52,6 +51,23 @@ export default function App() {
   const scanForPeripherals = () => {
     ble.startScan(onDeviceFound);
   };
+
+
+  const updateConfigBle = async (config : ConfigPilulier) => {
+    if(connectedDevice){
+      const services = await connectedDevice.services();
+      const service =  services.find(service => service.uuid === SERVICE_UUID);
+      const characteristics = await service?.characteristics();
+      const characteristic = characteristics?.find(characteristic => characteristic.uuid === CHARACTERISTIC_UUID_SET_CONFIG);
+      if(characteristic){
+        let configBinary = config.toBinaryString();
+        const Buffer = require("buffer").Buffer;
+        let encodedAuth = new Buffer(configBinary).toString("base64");
+        await characteristic.writeWithoutResponse(encodedAuth);
+        console.debug("Done writing config");
+      }
+    }
+  }
 
 
   // First, set the handler that will cause the notification
@@ -95,6 +111,8 @@ export default function App() {
         style={styles.pressable}
         onPress={() => {
           ble.stopScan();
+          connectedDevice?.cancelConnection();
+          setConnectedDevice(null);
           setAllDevices([]);
         }}
       >
@@ -163,6 +181,8 @@ export default function App() {
     console.debug(pilulier.getTotalPillsToTake());
     console.debug(pilulier.week.tuesday.mustTakeMorning);
     console.debug(pilulier.toJson());
+    console.debug(pilulier.toBinaryString());
+    updateConfigBle(pilulier);
   }
 
   return (
@@ -178,8 +198,12 @@ export default function App() {
         >
         <Text>Notification test</Text>
       </Pressable>
-      {renderShowConfigButton()}
-      <Grid confirmCallback={onConfirmGrid}/>
+      {connectedDevice && (
+      <>
+        {renderShowConfigButton()}
+        <Grid confirmCallback={onConfirmGrid} />
+      </>
+    )}
       <StatusBar style="auto" />
     </View>
   );
