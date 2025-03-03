@@ -161,6 +161,8 @@ export default function App() {
     console.debug(grid);
     var pilulier = ConfigPilulier.fromBoolArray(grid);
     console.debug(pilulier.getTotalPillsToTake());
+    console.debug(pilulier.week.tuesday.mustTakeMorning);
+    console.debug(pilulier.toJson());
   }
 
   return (

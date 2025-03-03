@@ -15,14 +15,28 @@ export class ConfigPilulier{
             throw new Error("Invalid bool array length");
         }
         var days = [];
-        for(let i = 0; i < 21; i+=3){
+        for(let i = 0; i < 7; i++){
             days.push({
                 mustTakeMorning : boolArray[i],
-                mustTakeMidday : boolArray[i+1],
-                mustTakeEvening : boolArray[i+2]
+                mustTakeMidday : boolArray[i+7],
+                mustTakeEvening : boolArray[i+14]
             });
         }
         return new ConfigPilulier(new Week(days));
+    }
+
+    //tojson
+    toJson() : string{
+        var json = {
+            monday : this.week.monday,
+            tuesday : this.week.tuesday,
+            wednesday : this.week.wednesday,
+            thursday : this.week.thursday,
+            friday : this.week.friday,
+            saturday : this.week.saturday,
+            sunday : this.week.sunday
+        };
+        return JSON.stringify(json);
     }
 
     getTotalPillsToTake() : number{
