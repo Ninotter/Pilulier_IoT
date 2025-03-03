@@ -11,6 +11,7 @@ import BLE from "./BLE";
 import BLEPermission from "./BLEPermissions";
 import * as Notifications from "expo-notifications";
 import Grid from "./grid";
+import {ConfigPilulier, Week, Day } from "./ConfigPilulier";
 
 export default function App() {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
@@ -124,12 +125,7 @@ export default function App() {
         <Pressable
           key={device.id}
           onPress={async () => {
-            const result = await ble.connectToDevice(device);
-            if (result) {
-              setConnectedDevice(result);
-              ble.stopScan();
-              setAllDevices([]);
-            }
+            await connectToDevice(device);
           }}
         >
           <Text>{device.name}</Text>
@@ -137,6 +133,15 @@ export default function App() {
       ) : null
     );
   };
+
+  const connectToDevice = async (device: Device) => {
+    const result = await ble.connectToDevice(device);
+    if (result) {
+      setConnectedDevice(result);
+      ble.stopScan();
+      setAllDevices([]);
+    }
+  }
 
   const renderShowConfigButton = () => {
     return connectedDevice ? (
@@ -154,6 +159,8 @@ export default function App() {
   const onConfirmGrid = (grid : Array<boolean>) => {
     console.debug("confirmed grid!");
     console.debug(grid);
+    var pilulier = ConfigPilulier.fromBoolArray(grid);
+    console.debug(pilulier.getTotalPillsToTake());
   }
 
   return (
@@ -194,10 +201,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   }
 });
-
-/**
- * @description
- * This class is responsible for notifying the user when the connection to the device is lost for a long period of time
- */
-class NotifyLongDisconnect{
-}

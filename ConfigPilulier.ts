@@ -1,4 +1,4 @@
-class ConfigPilulier{
+export class ConfigPilulier{
     private _week : Week;
     get week() : Week{
         return this._week;
@@ -42,7 +42,7 @@ class ConfigPilulier{
     }
 }
 
-class Week{
+export class Week{
     private days : Day[];
     get daysArray() : Day[]{
         return this.days;
@@ -79,7 +79,7 @@ class Week{
     }
 }
 
-type Day = {
+export type Day = {
     mustTakeMorning : boolean,
     mustTakeMidday : boolean,
     mustTakeEvening : boolean,
